@@ -1,0 +1,1401 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusConnect - Smart Lost & Found Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .page-view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease-in-out;
+        }
+        .page-view.active {
+            display: block;
+            opacity: 1;
+        }
+        /* Custom scrollbar for better visual polish */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #a6c6e6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-teal-900 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('home')">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl shadow-md text-white">
+                        <i class="fa-solid fa-[#ffffff] fa-magnifying-glass-location text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight text-white block leading-none">Campus<span class="text-indigo-400">Connect</span></span>
+                        <span class="text-xs text-indigo-200 font-medium">Smart Lost & Found</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <button onclick="navigateTo('home')" id="nav-home" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-white bg-indigo-800/80 hover:bg-indigo-700">
+                        <i class="fa-solid fa-house mr-1.5"></i>Home
+                    </button>
+                    <button onclick="navigateTo('report')" id="nav-report" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-indigo-100 hover:bg-indigo-800 hover:text-white">
+                        <i class="fa-solid fa-plus-circle mr-1.5"></i>Report Item
+                    </button>
+                    <button onclick="navigateTo('browse')" id="nav-browse" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-indigo-100 hover:bg-indigo-800 hover:text-white">
+                        <i class="fa-solid fa-[#ffffff] fa-list-ul mr-1.5"></i>Browse
+                    </button>
+                    <button onclick="navigateTo('matches')" id="nav-matches" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-indigo-100 hover:bg-indigo-800 hover:text-white relative">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1.5 text-amber-300"></i>AI Matches
+                        <span id="match-badge" class="hidden absolute -top-1 -right-1 bg-amber-500 text-slate-900 text-[10px] font-black px-1.5 py-0.5 rounded-full animate-pulse">0</span>
+                    </button>
+                    <button onclick="navigateTo('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-indigo-100 hover:bg-indigo-800 hover:text-white">
+                        <i class="fa-solid fa-user-gear mr-1.5"></i>Dashboard
+                    </button>
+                    <button onclick="navigateTo('recovered')" id="nav-recovered" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition text-indigo-100 hover:bg-indigo-800 hover:text-white">
+                        <i class="fa-solid fa-trophy mr-1.5 text-emerald-400"></i>Recovered
+                    </button>
+                </nav>
+
+                <!-- Mobile menu toggle button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="text-indigo-200 hover:text-white p-2 rounded-md focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-1">
+            <button onclick="navigateTo('home')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-800"><i class="fa-solid fa-house w-6"></i>Home</button>
+            <button onclick="navigateTo('report')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white"><i class="fa-solid fa-plus-circle w-6"></i>Report Item</button>
+            <button onclick="navigateTo('browse')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white"><i class="fa-solid fa-list-ul w-6"></i>Browse Feed</button>
+            <button onclick="navigateTo('matches')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-amber-300 hover:bg-indigo-800"><i class="fa-solid fa-wand-magic-sparkles w-6"></i>AI Smart Matches</button>
+            <button onclick="navigateTo('dashboard')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white"><i class="fa-solid fa-user-gear w-6"></i>My Dashboard</button>
+            <button onclick="navigateTo('recovered')" class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-emerald-400 hover:bg-indigo-800"><i class="fa-solid fa-trophy w-6"></i>Recovered Wall</button>
+        </div>
+    </header>
+
+    <!-- MAIN VIEW CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ================= PAGE 1: HOME (index.html) ================= -->
+        <div id="page-home" class="page-view active space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative bg-gradient-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 shadow-xl overflow-hidden">
+                <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+                <div class="max-w-2xl relative z-10 space-y-4">
+                    <span class="bg-indigo-700/60 border border-indigo-400/30 text-indigo-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-bolt text-amber-300"></i> BIET Lucknow Campus      
+                        <i class="fa-solid fa-bolt text-amber-300"></i> Next-Gen Campus Community Safety
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+                        Lost Something in Campus? <br><span class="text-indigo-300">Let AI Connect You.</span>
+                    </h1>
+                    <p class="text-indigo-100 text-base sm:text-lg">
+                        CampusConnect uses smart matching algorithms and automated WhatsApp/Email alerts to reunite students and staff with their missing belongings faster than ever.
+                    </p>
+                    <div class="pt-4 flex flex-wrap gap-4">
+                        <button onclick="navigateTo('report')" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-6 py-3.5 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center gap-2 text-base">
+                            <i class="fa-solid fa-plus-circle text-lg"></i> Report Lost or Found Item
+                        </button>
+                        <button onclick="navigateTo('browse')" class="bg-black-400 hover:bg-white/20 text-white font-semibold border border-white/20 px-6 py-3.5 rounded-xl transition flex items-center gap-2 text-base backdrop-blur-sm">
+                            <i class="fa-solid fa-magnifying-glass"></i> Browse All Postings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                    <div class="p-4 bg-red-100 text-red-600 rounded-xl">
+                        <i class="fa-solid fa-box-open text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Total Items Reported</p>
+                        <h3 id="stat-total" class="text-3xl font-extrabold text-slate-900">0</h3>
+                        <p class="text-xs text-slate-500">Lost & Found on campus</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                    <div class="p-4 bg-amber-100 text-amber-600 rounded-xl">
+                        <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Smart AI Matches</p>
+                        <h3 id="stat-matches" class="text-3xl font-extrabold text-slate-900">0</h3>
+                        <p class="text-xs text-slate-500">High confidence pairings</p>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 flex items-center space-x-4">
+                    <div class="p-4 bg-emerald-100 text-emerald-600 rounded-xl">
+                        <i class="fa-solid fa-handshake-angle text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase font-bold text-slate-400 tracking-wider">Successful Reunions</p>
+                        <h3 id="stat-recovered" class="text-3xl font-extrabold text-slate-900">0</h3>
+                        <p class="text-xs text-slate-500">Safely returned to owners</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Items Feed Section -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Recent Postings</h2>
+                        <p class="text-slate-500 text-sm">Latest reported lost and found items on campus</p>
+                    </div>
+                    <button onclick="navigateTo('browse')" class="text-indigo-600 hover:text-indigo-800 font-semibold text-sm flex items-center gap-1">
+                        View All Feed <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+                <div id="home-recent-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic rendering -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: REPORT ITEM (report.html) ================= -->
+        <div id="page-report" class="page-view space-y-6">
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-900 to-indigo-800 px-6 py-5 text-white flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold">Report a Lost or Found Item</h2>
+                            <p class="text-xs text-indigo-200">Fill out details to trigger immediate AI matching & alert notifications</p>
+                        </div>
+                        <i class="fa-solid fa-pen-to-square text-2xl text-indigo-300"></i>
+                    </div>
+
+                    <form id="report-form" onsubmit="handleReportSubmit(event)" class="p-6 sm:p-8 space-y-6">
+                        <!-- Report Type Switcher -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Item Report Type *</label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="cursor-pointer border-2 border-indigo-600 rounded-xl p-4 flex items-center justify-center gap-3 transition hover:bg-indigo-50/50 has-[:checked]:bg-red-50 has-[:checked]:border-red-500 has-[:checked]:text-red-700">
+                                    <input type="radio" name="itemType" value="Lost" checked class="w-4 h-4 text-red-600 focus:ring-red-500" onchange="toggleFormStyles()">
+                                    <div class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-red-500"></i> I LOST an item</div>
+                                </label>
+                                <label class="cursor-pointer border-2 border-slate-200 rounded-xl p-4 flex items-center justify-center gap-3 transition hover:bg-emerald-50/50 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-500 has-[:checked]:text-emerald-700">
+                                    <input type="radio" name="itemType" value="Found" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500" onchange="toggleFormStyles()">
+                                    <div class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-hand-holding-heart text-emerald-500"></i> I FOUND an item</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Item Title *</label>
+                                <input type="text" id="report-title" required placeholder="e.g. Blue Hydro Flask / iPhone 13 Pro" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Category *</label>
+                                <select id="report-category" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm bg-white">
+                                    <option value="">Select category...</option>
+                                    <option value="Electronics">Electronics (Laptop, Phone, Charger)</option>
+                                    <option value="ID/Cards">IDs & Cards (Student ID, Wallet, Drivers Lic)</option>
+                                    <option value="Books/Notes">Books & Notebooks</option>
+                                    <option value="Clothing">Clothing & Apparel (Jacket, Cap, Bag)</option>
+                                    <option value="Keys">Keys & Lanyards</option>
+                                    <option value="Accessories">Accessories (Glasses, Watch, Jewelry)</option>
+                                    <option value="Other">Other Miscellaneous</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Location & Date -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Campus Location / Zone *</label>
+                                <select id="report-location-zone" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm bg-white mb-2">
+                                    <option value="">Select campus zone...</option>
+                                    <option value="Main Library">Central Main Library</option>
+                                    <option value="Canteen">canteen</option>
+                                    <option value="Science & Tech Building">Computer lab</option>
+                                    <option value="Sports Complex / Gym">Sports Complex & PlayGround</option>
+                                    <option value="Lecture Hall "> Lecture Halls 101/102/103/104..</option>
+                                    <option value="Developerss">Web Designing Workshop Lab</option>
+                                    <option value="Campus Parking"> Parking Lot</option>
+                                    <option value="WorkShop">WorkShop lab</option>
+                                    <option value="Hostle">Boys Hostel</option>
+                                     <option value="Hostle">Girls Hostel</option>
+                                </select>
+                                <input type="text" id="report-location-details" placeholder="Specific spot (e.g., 2nd floor silent study desk 14)" class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Date & Time Lost/Found *</label>
+                                <input type="datetime-local" id="report-datetime" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Detailed Description *</label>
+                            <textarea id="report-description" rows="3" required placeholder="Include unique markings, color, brand, stickers, scratches or contents inside..." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+                        </div>
+
+                        <!-- Contact & Alert Settings -->
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200 space-y-4">
+                            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-bell text-indigo-600"></i> Contact Information & Automated Alerts
+                            </h3>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Reporter Full Name *</label>
+                                    <input type="text" id="report-name" required placeholder="John Doe" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Primary Email Address *</label>
+                                    <input type="email" id="report-email" required placeholder="student@university.edu" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">WhatsApp / Phone Number *</label>
+                                    <input type="tel" id="report-phone" required maxlength="10" pattern="[0-9]{10}" placeholder="+91 98765 43210" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Preferred Contact Method</label>
+                                    <select id="report-pref-contact" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                        <option value="WhatsApp">WhatsApp Direct Chat</option>
+                                        <option value="Email">Campus Email</option>
+                                        <option value="Phone Call">Direct Phone Call</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Image Attachment / Upload Simulation -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Attach Photo (Optional)</label>
+                            <div class="flex items-center gap-4">
+                                <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2.5 rounded-xl border border-slate-300 text-sm transition flex items-center gap-2">
+                                    <i class="fa-solid fa-camera text-indigo-600"></i> Choose File / Upload Image
+                                    <input type="file" id="report-image-input" accept="image/*" class="hidden" onchange="handleImagePreview(event)">
+                                </label>
+                                <span id="image-file-name" class="text-xs text-slate-500 italic">No image chosen (Default placeholder will be used)</span>
+                            </div>
+                            <div id="image-preview-container" class="mt-3 hidden">
+                                <p class="text-xs font-semibold text-slate-500 mb-1">Image Preview:</p>
+                                <img id="image-preview" src="" alt="Preview" class="h-32 w-48 object-cover rounded-xl border border-slate-300 shadow-sm">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-2">
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                                <i class="fa-solid fa-paper-plane"></i> Publish Item & Dispatch Instant Alerts
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: BROWSE ITEMS (browse.html) ================= -->
+        <div id="page-browse" class="page-view space-y-6">
+            <!-- Filter & Search Controls Header -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900">Campus Items Directory</h2>
+                        <p class="text-xs text-slate-500">Search and filter active lost & found listings</p>
+                    </div>
+                    <!-- Live Search Bar -->
+                    <div class="relative w-full md:w-80">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+                        <input type="text" id="browse-search" oninput="renderBrowseItems()" placeholder="Search title, description, location..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Filter Controls -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Status Type</label>
+                        <select id="filter-type" onchange="renderBrowseItems()" class="w-full p-2 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white outline-none">
+                            <option value="ALL">All Types</option>
+                            <option value="Lost">Only Lost</option>
+                            <option value="Found">Only Found</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+                        <select id="filter-category" onchange="renderBrowseItems()" class="w-full p-2 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white outline-none">
+                            <option value="ALL">All Categories</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="ID/Cards">IDs & Cards</option>
+                            <option value="Books/Notes">Books & Notes</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Keys">Keys</option>
+                            <option value="Accessories">Accessories</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Campus Zone</label>
+                        <select id="filter-zone" onchange="renderBrowseItems()" class="w-full p-2 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white outline-none">
+                           <option value="">Select campus zone...</option>
+                                    <option value="Main Library">Central Main Library</option>
+                                    <option value="Canteen">canteen</option>
+                                    <option value="Science & Tech Building">Computer lab</option>
+                                    <option value="Sports Complex / Gym">Sports Complex & PlayGround</option>
+                                    <option value="Lecture Hall "> Lecture Halls 101/102/103/104..</option>
+                                    <option value="Developerss">Web Designing Workshop Lab</option>
+                                    <option value="Campus Parking"> Parking Lot</option>
+                                    <option value="WorkShop">WorkShop lab</option>
+                                    <option value="Hostle">Boys Hostel</option>
+                                    <option value="Hostle">Girls Hostel</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Sort By</label>
+                        <select id="filter-sort" onchange="renderBrowseItems()" class="w-full p-2 rounded-lg border border-slate-300 bg-slate-50 focus:bg-white outline-none">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item Listings Grid -->
+            <div id="browse-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+        <!-- ================= PAGE 4: SMART AI MATCHES (matches.html) ================= -->
+        <div id="page-matches" class="page-view space-y-6">
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-2 max-w-2xl">
+                    <span class="bg-amber-400 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI Recommendation Engine
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold">Smart Automated Match Pairs</h2>
+                    <p class="text-slate-300 text-sm">
+                        Our intelligent matching algorithm continuously analyzes category similarities, description keywords, dates, and campus locations to suggest probable matches between reported Lost and Found items.
+                    </p>
+                </div>
+                <button onclick="runAIMatching(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-5 py-3 rounded-xl shadow-lg transition whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate"></i> Re-Run AI Match Analysis
+                </button>
+            </div>
+
+            <div id="ai-matches-container" class="space-y-4">
+                <!-- Match pairs will be generated here -->
+            </div>
+        </div>
+
+        <!-- ================= PAGE 5: DASHBOARD (dashboard.html) ================= -->
+        <div id="page-dashboard" class="page-view space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- User Profile & Quick Actions Panel -->
+                <div class="space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center space-y-4">
+                        <div class="w-20 h-20 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center text-3xl font-black mx-auto shadow-inner">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-900" id="dash-user-name">Campus User</h3>
+                            <p class="text-xs text-slate-500" id="dash-user-email">student@university.edu</p>
+                        </div>
+                        <div class="pt-2 flex justify-center gap-2 text-xs font-semibold">
+                            <span class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-200">Verified Student</span>
+                            <span class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200">Active Reporter</span>
+                        </div>
+                    </div>
+
+                    <!-- Notification Log Simulation -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Dispatched Alert Log
+                        </h3>
+                        <p class="text-xs text-slate-500">Simulated record of sent WhatsApp & Email messages</p>
+                        <div id="notification-log" class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                            <!-- Logs generated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Reported Items Management List -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Manage My Reported Listings</h3>
+                            <p class="text-xs text-slate-500">Mark items as resolved/recovered or remove obsolete reports</p>
+                        </div>
+                        <span id="my-items-count" class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-full">0 Reports</span>
+                    </div>
+
+                    <div id="my-items-list" class="space-y-4">
+                        <!-- Dynamic user items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 6: RECOVERED ITEMS (recovered.html) ================= -->
+        <div id="page-recovered" class="page-view space-y-6">
+            <div class="bg-gradient-to-r from-emerald-800 via-teal-900 to-emerald-950 text-white p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-2">
+                    <span class="bg-emerald-400 text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
+                        <i class="fa-solid fa-trophy"></i> Wall of Success
+                    </span>
+                    <h2 class="text-3xl font-extrabold">Campus Reunions & Recoveries</h2>
+                    <p class="text-emerald-100 text-sm max-w-2xl">
+                        Celebrating lost items that were successfully safely returned to their rightful owners through our CampusConnect community network!
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md px-6 py-4 rounded-xl text-center border border-white/20">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-200 block">Total Recovered</span>
+                    <span id="recovered-wall-count" class="text-4xl font-extrabold text-white">0</span>
+                </div>
+            </div>
+
+            <!-- Wall Grid -->
+            <div id="recovered-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="bg-indigo-600 p-1.5 rounded-lg text-white">
+                    <i class="fa-solid fa-[#ffffff] fa-magnifying-glass-location text-sm"></i>
+                </div>
+                <span class="font-bold text-white text-base">CampusConnect Portal</span>
+            </div>
+            <p class="text-xs text-slate-500">
+                &copy; 2026 CampusConnect Smart Systems. All rights reserved. Designed for campus safety & welfare.
+            </p>
+            <div class="flex space-x-4 text-xs">
+                <a href="#" onclick="alert('CampusConnect Safety Policy: Always meet in public illuminated campus zones (e.g. Library Lobby) when handing over found belongings.')" class="hover:text-white transition">Safety Tips</a>
+                <a href="#" onclick="alert('Campus Police Contact: Dial (555) 019-9999 for emergency assistance.')" class="hover:text-white transition">Campus Police</a>
+                <a href="#" onclick="alert('Notification Simulation Mode Active.')" class="hover:text-white transition">API Status</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ITEM DETAIL MODAL -->
+    <div id="item-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+            <div class="relative">
+                <img id="modal-img" src="" alt="Item" class="w-full h-56 object-cover bg-slate-100">
+                <button onclick="closeModal()" class="absolute top-3 right-3 bg-slate-900/60 hover:bg-slate-900 text-white rounded-full w-8 h-8 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <span id="modal-badge" class="absolute bottom-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow-md text-white"></span>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div>
+                    <span id="modal-category" class="text-xs font-semibold text-indigo-600 uppercase tracking-wider"></span>
+                    <h3 id="modal-title" class="text-xl font-bold text-slate-900"></h3>
+                </div>
+
+                <p id="modal-desc" class="text-slate-600 text-sm bg-slate-50 p-3.5 rounded-xl border border-slate-100"></p>
+
+                <div class="space-y-2 text-xs text-slate-600">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot w-4 text-indigo-500"></i>
+                        <span id="modal-location" class="font-medium text-slate-800"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-clock w-4 text-indigo-500"></i>
+                        <span id="modal-datetime"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-user w-4 text-indigo-500"></i>
+                        <span id="modal-reporter"></span>
+                    </div>
+                </div>
+
+                <!-- Contact & Action Buttons -->
+                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+                    <button id="modal-wa-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-base"></i> Contact via WhatsApp
+                    </button>
+                    <button id="modal-email-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-envelope text-base"></i> Send Email Alert
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION ALERT MODAL / DISPATCH TOAST SIMULATOR -->
+    <div id="dispatch-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-indigo-100">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Notification Dispatched!</h3>
+                    <p class="text-xs text-slate-500">Simulated WhatsApp & Email alert generated</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-2 font-mono">
+                <div class="text-slate-500 font-sans font-bold uppercase text-[10px]">WhatsApp Live Preview:</div>
+                <div id="dispatch-preview-text" class="text-slate-800 whitespace-pre-wrap"></div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="dispatch-wa-link" target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp text-sm"></i> Open WhatsApp Web
+                </button>
+                <button onclick="closeDispatchModal()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // ================= APP STATE & INITIAL SEED DATA =================
+        const DEFAULT_ITEMS = [
+            {
+                id: "item-101",
+                type: "Lost",
+                title: "MacBook Pro 14 (Space Grey)",
+                category: "Electronics",
+                locationZone: "Computer Lab",
+                locationDetails: "1st Floor Computer lab",
+                datetime: "2026-10-27T14:30",
+                description: "Space Grey MacBook Pro with a sticker of Python logo and GitHub mascot. Left in a black sleeve.",
+                reporterName: "Alex Rivera",
+                reporterEmail: "arivera@university.edu",
+                reporterPhone: "+15550192834",
+                contactPref: "WhatsApp",
+                imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
+                status: "Active",
+                highFives: 0,
+                createdAt: "2026-10-27T15:00:00.000Z"
+            },
+            {
+                id: "item-102",
+                type: "Found",
+                title: "Apple MacBook Pro Laptop",
+                category: "Electronics",
+                locationZone: "Computer Lab",
+                locationDetails: "1st Floor Computer lab",
+                datetime: "2026-10-27T16:15",
+                description: "Found grey laptop inside black protective case on printer desk.",
+                reporterName: "Riddhi Nigam",
+                reporterEmail: "riddhi444@gmail.com",
+                reporterPhone: "+91983899999",
+                contactPref: "Email",
+                imageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80",
+                status: "Active",
+                highFives: 0,
+                createdAt: "2026-10-27T16:30:00.000Z"
+            },
+            {
+                id: "item-103",
+                type: "Lost",
+                title: "Olive Green Stainless Steel bottle",
+                category: "Accessories",
+                locationZone: "Sports Complex /PlayGround",
+                locationDetails: "Canteen/Caffeteria ",
+                datetime: "2026-10-26T18:00",
+                description: "32oz Olive Green HydroFlask with National Park stickers and dented bottom cap.",
+                reporterName: "Reema Yadav",
+                reporterEmail: "reema123@gmailcom",
+                reporterPhone: "+915501837421",
+                contactPref: "WhatsApp",
+                imageUrl: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80",
+                status: "Active",
+                highFives: 0,
+                createdAt: "2026-10-26T18:30:00.000Z"
+            },
+            {
+                id: "item-104",
+                type: "Found",
+                title: "Student Lunch Box",
+                category: "Accessories",
+                locationZone: "Lecture Hall",
+                locationDetails: "104 Lecture hall",
+                datetime: "2026-10-28T09:15",
+                description: "  Lunch Box in blue color of Stainless Steel ",
+                reporterName: "Pradeep Yadav",
+                reporterEmail: "pradeep240107@gmail.com",
+                reporterPhone: "+917482040462",
+                contactPref: "WhatsApp",
+                imageUrl: "https://tse2.mm.bing.net/th/id/OIP.ury4Wzc0pFBpq2yHC6BEVwHaHa?r=0&pid=ImgDet&w=206&h=206&c=7&dpr=1.3&o=7&rm=3",
+                status: "Active",
+                highFives: 0,
+                createdAt: "2026-10-28T09:30:00.000Z"
+            },
+             {
+                id: "item-105",
+                type: "Lost",
+                title: "Calculus III Textbook & Notes",
+                category: "Books/Notes",
+                locationZone: "Lecture Hall A/B",
+                locationDetails: "Hall B Row F Seat 12",
+                datetime: "2026-10-22T11:00",
+                description: "Hardcover Calculus book with handwritten notes tucked inside.",
+                reporterName: "Mainudin Warshi",
+                reporterEmail: "mainudin4321@gmail.com",
+                reporterPhone: "+91550198811",
+                contactPref: "Email",
+                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80",
+                status: "Recovered",
+                highFives: 14,
+                createdAt: "2026-10-22T11:30:00.000Z"
+            },
+            {
+                id: "item-106",
+                type: "Found",
+                title: "Calculus III Textbook & Notes",
+                category: "Books/Notes",
+                locationZone: "Lecture Hall A/B",
+                locationDetails: "Hall B Row F Seat 12",
+                datetime: "2026-10-22T11:00",
+                description: "Hardcover Calculus book with handwritten notes tucked inside.",
+                reporterName: "Elena Rostova",
+                reporterEmail: "erostova@university.edu",
+                reporterPhone: "+15550198811",
+                contactPref: "Email",
+                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80",
+                status: "Recovered",
+                highFives: 14,
+                createdAt: "2026-10-22T11:30:00.000Z"
+            },
+            {
+                id: "item-107",
+                type: "Recovered",
+                title: "Calculus III Textbook & Notes",
+                category: "Books/Notes",
+                locationZone: "Lecture Hall A/B",
+                locationDetails: "Hall B Row F Seat 12",
+                datetime: "2026-10-22T11:00",
+                description: "Hardcover Calculus book with handwritten notes tucked inside.",
+                reporterName: "Elena Rostova",
+                reporterEmail: "erostova@university.edu",
+                reporterPhone: "+15550198811",
+                contactPref: "Email",
+                imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80",
+                status: "Recovered",
+                recoveredStory: "Reunited within 2 hours! Thanks to CampusConnect AI match that notified me when a classmate turned it in at the lecture hall podium.",
+                highFives: 14,
+                createdAt: "2026-10-22T11:30:00.000Z"
+            }
+        ];
+
+        let itemsStore = [];
+        let notificationLogs = [];
+
+        // Initialize App on load
+        window.onload = function() {
+            initStorage();
+            runAIMatching(false);
+            navigateTo('home');
+        };
+
+        function initStorage() {
+            const storedItems = localStorage.getItem('campusconnect_items');
+            if (!storedItems) {
+                itemsStore = DEFAULT_ITEMS;
+                saveStorage();
+            } else {
+                itemsStore = JSON.parse(storedItems);
+            }
+
+            const storedLogs = localStorage.getItem('campusconnect_logs');
+            if (storedLogs) {
+                notificationLogs = JSON.parse(storedLogs);
+            } else {
+                notificationLogs = [
+                    { time: "Just now", type: "System Alert", details: "CampusConnect AI Matching engine online." }
+                ];
+            }
+        }
+
+        function saveStorage() {
+            localStorage.setItem('campusconnect_items', JSON.stringify(itemsStore));
+            localStorage.setItem('campusconnect_logs', JSON.stringify(notificationLogs));
+            updateStatsUI();
+        }
+        // ================= ROUTING & SPA VIEW NAVIGATION =================
+        function navigateTo(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page-view');
+            pages.forEach(p => p.classList.remove('active'));
+
+            // Show selected page
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            // Update Navbar Active State
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => {
+                btn.classList.remove('bg-indigo-800', 'text-white');
+                btn.classList.add('text-indigo-100');
+            });
+
+            const activeBtn = document.getElementById('nav-' + pageId);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-800', 'text-white');
+            }
+
+            // Mobile menu collapse
+            document.getElementById('mobile-menu').classList.add('hidden');
+
+            // View specific render hooks
+            if (pageId === 'home') renderHomePage();
+            if (pageId === 'browse') renderBrowseItems();
+            if (pageId === 'matches') runAIMatching(false);
+            if (pageId === 'dashboard') renderDashboard();
+            if (pageId === 'recovered') renderRecoveredWall();
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // ================= GLOBAL STATS =================
+        function updateStatsUI() {
+            const total = itemsStore.length;
+            const recovered = itemsStore.filter(i => i.status === 'Recovered').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-recovered').innerText = recovered;
+            document.getElementById('recovered-wall-count').innerText = recovered;
+        }
+
+        // ================= HOME PAGE LOGIC =================
+        function renderHomePage() {
+            updateStatsUI();
+            const grid = document.getElementById('home-recent-grid');
+            grid.innerHTML = '';
+
+            const activeItems = itemsStore.filter(i => i.status === 'Active').slice(-3).reverse();
+
+            if (activeItems.length === 0) {
+                grid.innerHTML = `<div class="col-span-3 text-center py-8 text-slate-400">No recent postings available.</div>`;
+                return;
+            }
+
+            activeItems.forEach(item => {
+                grid.appendChild(createItemCardHTML(item));
+            });
+        }
+
+        // ================= REPORT FORM LOGIC =================
+        let currentUploadedImage = null;
+
+        function toggleFormStyles() {
+            // Radio styling updates dynamically through Tailwind CSS has-[:checked]
+        }
+
+        function handleImagePreview(event) {
+            const file = event.target.files[0];
+            const fileNameSpan = document.getElementById('image-file-name');
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('image-preview');
+
+            if (file) {
+                fileNameSpan.innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentUploadedImage = e.target.result;
+                    previewImg.src = currentUploadedImage;
+                    previewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                currentUploadedImage = null;
+                fileNameSpan.innerText = "No image chosen (Default placeholder will be used)";
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        function handleReportSubmit(e) {
+            e.preventDefault();
+
+            const itemType = document.querySelector('input[name="itemType"]:checked').value;
+            const title = document.getElementById('report-title').value;
+            const category = document.getElementById('report-category').value;
+            const locationZone = document.getElementById('report-location-zone').value;
+            const locationDetails = document.getElementById('report-location-details').value;
+            const datetime = document.getElementById('report-datetime').value;
+            const description = document.getElementById('report-description').value;
+            const name = document.getElementById('report-name').value;
+            const email = document.getElementById('report-email').value;
+            const phone = document.getElementById('report-phone').value.trim();
+            const phoneDigitOnly=phone.replace(/[^0-9]/g, '');
+            if(phoneDigitOnly.length<10){
+                alert("Please enter a valid phone/whatsapp number with at 10 digits.");
+                return;
+            }
+            const contactPref = document.getElementById('report-pref-contact').value;
+
+            // Default images by category if no custom uploaded
+            const categoryImages = {
+                'Electronics': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80',
+                'ID/Cards': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80',
+                'Books/Notes': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80',
+                'Clothing': 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
+                'Keys': 'https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=600&q=80',
+                'Accessories': 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80',
+                'Other': 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&w=600&q=80'
+            };
+
+            const fallbackImg = categoryImages[category] || categoryImages['Other'];
+
+            const newItem = {
+                id: 'item-' + Date.now(),
+                type: itemType,
+                title: title,
+                category: category,
+                locationZone: locationZone,
+                locationDetails: locationDetails,
+                datetime: datetime,
+                description: description,
+                reporterName: name,
+                reporterEmail: email,
+                reporterPhone: phoneDigitOnly,
+                contactPref: contactPref,
+                imageUrl: currentUploadedImage || fallbackImg,
+                status: 'Active',
+                highFives: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            itemsStore.unshift(newItem);
+
+            // Log notification simulation
+            const logEntry = {
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: `${itemType} Item Registered`,
+                details: `Alert generated for ${title} via ${contactPref}`
+            };
+            notificationLogs.unshift(logEntry);
+
+            saveStorage();
+
+            // Reset Form
+            document.getElementById('report-form').reset();
+            document.getElementById('image-preview-container').classList.add('hidden');
+            currentUploadedImage = null;
+
+            // Trigger simulated dispatch notification modal
+            triggerNotificationDispatchModal(newItem);
+        }
+
+        function triggerNotificationDispatchModal(item) {
+            const previewText = `📢 *CAMPUSCONNECT ALERT* 📢\n\nType: [${item.type.toUpperCase()}]\nItem: ${item.title}\nCategory: ${item.category}\nLocation: ${item.locationZone} (${item.locationDetails})\nDate: ${item.datetime}\nReporter: ${item.reporterName} (${item.reporterPhone})\n\nIf you have information, contact directly via CampusConnect.`;
+
+            document.getElementById('dispatch-preview-text').innerText = previewText;
+
+            // Formulate WhatsApp web link
+            const encodedText = encodeURIComponent(previewText);
+            const waPhone = item.reporterPhone.replace(/[^0-9]/g, '');
+            document.getElementById('dispatch-wa-link').href = `https://wa.me/${waPhone}?text=${encodedText}`;
+
+            document.getElementById('dispatch-modal').classList.remove('hidden');
+        }
+
+        function closeDispatchModal() {
+            document.getElementById('dispatch-modal').classList.add('hidden');
+            navigateTo('browse');
+        }
+
+        // ================= BROWSE ITEMS LOGIC =================
+        function renderBrowseItems() {
+            const grid = document.getElementById('browse-grid');
+            grid.innerHTML = '';
+
+            const searchQuery = document.getElementById('browse-search').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+            const filterCategory = document.getElementById('filter-category').value;
+            const filterZone = document.getElementById('filter-zone').value;
+            const filterSort = document.getElementById('filter-sort').value;
+
+            let filtered = itemsStore.filter(item => item.status === 'Active');
+
+            if (filterType !== 'ALL') {
+                filtered = filtered.filter(item => item.type === filterType);
+            }
+
+            if (filterCategory !== 'ALL') {
+                filtered = filtered.filter(item => item.category === filterCategory);
+            }
+
+            if (filterZone !== 'ALL') {
+                filtered = filtered.filter(item => item.locationZone === filterZone);
+            }
+
+            if (searchQuery) {
+                filtered = filtered.filter(item => 
+                    item.title.toLowerCase().includes(searchQuery) ||
+                    item.description.toLowerCase().includes(searchQuery) ||
+                    item.locationZone.toLowerCase().includes(searchQuery) ||
+                    item.locationDetails.toLowerCase().includes(searchQuery)
+                );
+            }
+
+            if (filterSort === 'newest') {
+                filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else {
+                filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-3 bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-400 space-y-3">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-300"></i>
+                        <h3 class="font-bold text-slate-700">No matching items found</h3>
+                        <p class="text-xs text-slate-500">Try broadening your search query or filter parameters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                grid.appendChild(createItemCardHTML(item));
+            });
+        }
+
+        // CARD COMPONENT GENERATOR
+        function createItemCardHTML(item) {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-slate-200/80 overflow-hidden flex flex-col justify-between";
+
+            const badgeBg = item.type === 'Lost' ? 'bg-red-500' : 'bg-emerald-500';
+
+            card.innerHTML = `
+                <div>
+                    <div class="relative h-44 overflow-hidden bg-slate-100">
+                        <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover transition transform hover:scale-105 duration-300">
+                        <span class="absolute top-3 left-3 ${badgeBg} text-white font-black text-[11px] uppercase tracking-wider px-3 py-1 rounded-full shadow">
+                            ${item.type}
+                        </span>
+                        <span class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-white font-medium text-[11px] px-2.5 py-1 rounded-full">
+                            ${item.category}
+                        </span>
+                    </div>
+
+                    <div class="p-5 space-y-3">
+                        <h3 class="font-bold text-slate-900 text-base line-clamp-1">${item.title}</h3>
+                        <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${item.description}</p>
+                        
+                        <div class="space-y-1.5 text-xs text-slate-500 pt-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-location-dot text-indigo-500 w-4"></i>
+                                <span class="font-medium text-slate-700">${item.locationZone}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-regular fa-clock text-indigo-500 w-4"></i>
+                                <span>${new Date(item.datetime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-5 pb-5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button onclick="openModal('${item.id}')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-eye"></i> View Details
+                    </button>
+                    <button onclick="directContact('${item.id}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-comment"></i> Contact
+                    </button>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // ================= SMART AI MATCHING ALGORITHM =================
+        function runAIMatching(manualTrigger = false) {
+            const container = document.getElementById('ai-matches-container');
+            container.innerHTML = '';
+
+            const lostItems = itemsStore.filter(i => i.type === 'Lost' && i.status === 'Active');
+            const foundItems = itemsStore.filter(i => i.type === 'Found' && i.status === 'Active');
+
+            const matches = [];
+
+            // Matching Logic Algorithm
+            lostItems.forEach(lost => {
+                foundItems.forEach(found => {
+                    let score = 0;
+                    const reasons = [];
+
+                    // Category Match (High Weight)
+                    if (lost.category === found.category) {
+                        score += 40;
+                        reasons.push("Exact Category Match (" + lost.category + ")");
+                    }
+
+                    // Location Match (High Weight)
+                    if (lost.locationZone === found.locationZone) {
+                        score += 30;
+                        reasons.push("Same Campus Zone (" + lost.locationZone + ")");
+                    }
+
+                    // Keyword Analysis in Title & Description
+                    const lostKeywords = (lost.title + " " + lost.description).toLowerCase().split(/\W+/);
+                    const foundKeywords = (found.title + " " + found.description).toLowerCase().split(/\W+/);
+                    
+                    const commonKeywords = lostKeywords.filter(word => word.length > 3 && foundKeywords.includes(word));
+                    if (commonKeywords.length > 0) {
+                        const keywordScore = Math.min(commonKeywords.length * 10, 30);
+                        score += keywordScore;
+                        reasons.push(`Matching keywords: "${[...new Set(commonKeywords)].slice(0, 3).join(', ')}"`);
+                    }
+
+                    // Only flag as match if score >= 40%
+                    if (score >= 40) {
+                        matches.push({
+                            score: Math.min(score, 98), // cap score at 98%
+                            lost: lost,
+                            found: found,
+                            reasons: reasons
+                        });
+                    }
+                });
+            });
+
+            // Update Navbar badge
+            const matchBadge = document.getElementById('match-badge');
+            if (matches.length > 0) {
+                matchBadge.innerText = matches.length;
+                matchBadge.classList.remove('hidden');
+                document.getElementById('stat-matches').innerText = matches.length;
+            } else {
+                matchBadge.classList.add('hidden');
+                document.getElementById('stat-matches').innerText = '0';
+            }
+
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-400 space-y-3">
+                        <i class="fa-solid fa-wand-magic-sparkles text-4xl text-amber-400"></i>
+                        <h3 class="font-bold text-slate-800 text-base">No AI Matches Found Right Now</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">
+                            The system regularly compares active lost and found reports. New postings with matching categories or location signatures will trigger automatic pairing recommendations here.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            matches.sort((a, b) => b.score - a.score);
+
+            matches.forEach(match => {
+                const matchCard = document.createElement('div');
+                matchCard.className = "bg-white p-6 rounded-2xl border-2 border-indigo-100 shadow-sm space-y-4 hover:border-indigo-300 transition";
+                
+                matchCard.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-indigo-50/60 p-3.5 rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-indigo-600 text-white font-black text-xs px-2.5 py-1 rounded-lg flex items-center gap-1">
+                                <i class="fa-solid fa-bolt text-amber-300"></i> ${match.score}% MATCH SCORE
+                            </span>
+                            <span class="text-xs font-semibold text-indigo-900">AI High Confidence Pairing</span>
+                        </div>
+                        <div class="text-xs text-slate-500 font-medium">
+                            <i class="fa-solid fa-bullseye text-indigo-500 mr-1"></i> ${match.reasons.join(' • ')}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                        <!-- Lost Item Side -->
+                        <div class="border border-red-100 bg-red-50/30 p-4 rounded-xl space-y-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2 py-0.5 rounded">LOST ITEM</span>
+                            <h4 class="font-bold text-slate-900 text-base">${match.lost.title}</h4>
+                            <p class="text-xs text-slate-600 line-clamp-2">${match.lost.description}</p>
+                            <div class="text-[11px] text-slate-500 pt-1">
+                                <strong>Reporter:</strong> ${match.lost.reporterName} (${match.lost.locationZone})
+                            </div>
+                        </div>
+
+                        <!-- Found Item Side -->
+                        <div class="border border-emerald-100 bg-emerald-50/30 p-4 rounded-xl space-y-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">FOUND ITEM</span>
+                            <h4 class="font-bold text-slate-900 text-base">${match.found.title}</h4>
+                            <p class="text-xs text-slate-600 line-clamp-2">${match.found.description}</p>
+                            <div class="text-[11px] text-slate-500 pt-1">
+                                <strong>Holder:</strong> ${match.found.reporterName} (${match.found.locationZone})
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                        <button onclick="requestMatchVerification('${match.lost.id}', '${match.found.id}')" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs py-3 px-4 rounded-xl shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-handshake"></i> Request Match Verification & Initiate Chat
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(matchCard);
+            });
+
+            if (manualTrigger) {
+                alert("AI Match algorithm refreshed! Processed " + itemsStore.length + " active items.");
+            }
+        }
+
+        function requestMatchVerification(lostId, foundId) {
+            const lost = itemsStore.find(i => i.id === lostId);
+            const found = itemsStore.find(i => i.id === foundId);
+
+            if (!lost || !found) return;
+
+            const text = `Hi ${found.reporterName}, CampusConnect AI detected a potential match between my lost item (${lost.title}) and the item you reported finding (${found.title}). Could we verify if they match?`;
+            const waPhone = found.reporterPhone.replace(/[^0-9]/g, '');
+            
+            window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // ================= DASHBOARD LOGIC =================
+        function renderDashboard() {
+            const list = document.getElementById('my-items-list');
+            list.innerHTML = '';
+
+            const myItems = itemsStore; // In single-user demo, all items are managed here
+            document.getElementById('my-items-count').innerText = `${myItems.length} Total Reports`;
+
+            if (myItems.length === 0) {
+                list.innerHTML = `<div class="text-slate-400 text-sm text-center py-6">No reports filed yet.</div>`;
+            } else {
+                myItems.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = "bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4";
+
+                    const isRecovered = item.status === 'Recovered';
+
+                    row.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <img src="${item.imageUrl}" class="w-12 h-12 rounded-lg object-cover bg-slate-200">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-slate-900 text-sm">${item.title}</h4>
+                                    <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${item.type === 'Lost' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${item.type}</span>
+                                    ${isRecovered ? '<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded">RESOLVED</span>' : ''}
+                                </div>
+                                <p class="text-xs text-slate-500">${item.locationZone} • Filed on ${new Date(item.datetime).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            ${!isRecovered ? `
+                                <button onclick="markAsResolved('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1">
+                                    <i class="fa-solid fa-check"></i> Mark Recovered
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteReport('${item.id}')" class="bg-slate-200 hover:bg-red-100 hover:text-red-700 text-slate-700 text-xs font-bold p-2 rounded-lg transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    list.appendChild(row);
+                });
+            }
+            // Render Log Simulation
+            const logContainer = document.getElementById('notification-log');
+            logContainer.innerHTML = '';
+            notificationLogs.forEach(log => {
+                const item = document.createElement('div');
+                item.className = "p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs space-y-1";
+                item.innerHTML = `
+                    <div class="flex justify-between font-bold text-slate-700">
+                        <span>${log.type}</span>
+                        <span class="text-[10px] text-slate-400 font-normal">${log.time}</span>
+                    </div>
+                    <p class="text-slate-500 text-[11px]">${log.details}</p>
+                `;
+                logContainer.appendChild(item);
+            });
+        }
+        function markAsResolved(itemId) {
+            const item = itemsStore.find(i => i.id === itemId);
+            if (!item) return;
+            const story = prompt("Congratulations on recovering your item! Add a short story or thank you note for the campus wall (Optional):", "Safely returned thanks to CampusConnect community alert!");
+            
+            item.status = 'Recovered';
+            item.recoveredStory = story || "Item returned to rightful owner.";
+            item.highFives = 1;
+
+            notificationLogs.unshift({
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: "Status Update",
+                details: `Item "${item.title}" marked as Recovered.`
+            });
+
+            saveStorage();
+            renderDashboard();
+            runAIMatching(false);
+            alert("Status updated! Item added to the Campus Reunions Wall.");
+        }
+        function deleteReport(itemId) {
+            if (confirm("Are you sure you want to delete this listing report?")) {
+                itemsStore = itemsStore.filter(i => i.id !== itemId);
+                saveStorage();
+                renderDashboard();
+                runAIMatching(false);
+            }
+        }
+        // ================= RECOVERED WALL LOGIC =================
+        function renderRecoveredWall() {
+            const grid = document.getElementById('recovered-grid');
+            grid.innerHTML = '';
+            const recovered = itemsStore.filter(i => i.status === 'Recovered');
+            if (recovered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-3 bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-400">
+                        <i class="fa-solid fa-trophy text-4xl text-emerald-400 mb-2"></i>
+                        <h3 class="font-bold text-slate-800">No Recovered Items Listed Yet</h3>
+                        <p class="text-xs text-slate-500">Items marked as resolved will appear on this wall of community success.</p>
+                    </div>
+                `;
+                return;
+            }
+            recovered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden space-y-4 p-5 flex flex-col justify-between";
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-emerald-100 text-emerald-800 font-extrabold text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i> RECOVERED
+                            </span>
+                            <span class="text-xs text-slate-400">${new Date(item.datetime).toLocaleDateString()}</span>
+                        </div>
+
+                        <div class="flex items-center space-x-3">
+                            <img src="${item.imageUrl}" class="w-16 h-16 rounded-xl object-cover border border-slate-200">
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-base">${item.title}</h4>
+                                <p class="text-xs text-slate-500">${item.category} • ${item.locationZone}</p>
+                            </div>
+                        </div>
+                        <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100/80 text-xs text-emerald-950 italic">
+                            "${item.recoveredStory || 'Reunited safely with owner!'}"
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span class="text-xs text-slate-500 font-medium">Original Reporter: ${item.reporterName}</span>
+                        <button onclick="giveHighFive('${item.id}')" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-hand-holding-heart text-amber-600"></i>
+                            <span id="high-five-${item.id}">${item.highFives || 0} High-Fives</span>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        function giveHighFive(itemId) {
+            const item = itemsStore.find(i => i.id === itemId);
+            if (item) {
+                item.highFives = (item.highFives || 0) + 1;
+                saveStorage();
+                document.getElementById(`high-five-${itemId}`).innerText = `${item.highFives} High-Fives`;
+            }
+        }
+        // ================= MODAL DETAILED VIEW & CONTACT =================
+        function openModal(itemId) {
+            const item = itemsStore.find(i => i.id === itemId);
+            if (!item) return;
+            document.getElementById('modal-img').src = item.imageUrl;
+            document.getElementById('modal-title').innerText = item.title;
+            document.getElementById('modal-category').innerText = item.category;
+            document.getElementById('modal-desc').innerText = item.description;
+            document.getElementById('modal-location').innerText = `${item.locationZone} (${item.locationDetails || 'General area'})`;
+            document.getElementById('modal-datetime').innerText = `Reported: ${new Date(item.datetime).toLocaleString()}`;
+            document.getElementById('modal-reporter').innerText = `Reported by: ${item.reporterName}`;
+            const badge = document.getElementById('modal-badge');
+            badge.innerText = item.type;
+            badge.className = `absolute bottom-3 left-3 text-xs font-bold px-3 py-1 rounded-full shadow-md text-white ${item.type === 'Lost' ? 'bg-red-500' : 'bg-emerald-500'}`;
+            // Wire up WhatsApp Direct Link
+            const waText = encodeURIComponent(`Hi ${item.reporterName}, I am contacting you via CampusConnect regarding your ${item.type} item listing: "${item.title}".`);
+            const waPhone = item.reporterPhone.replace(/[^0-9]/g, '');
+            document.getElementById('modal-wa-btn').onclick = function() {
+                window.open(`https://wa.me/${waPhone}?text=${waText}`, '_blank');
+            };
+            // Wire up Email Alert Link
+            document.getElementById('modal-email-btn').onclick = function() {
+                window.location.href = `mailto:${item.reporterEmail}?subject=CampusConnect: Inquiry regarding ${item.title}&body=Hi ${item.reporterName},\n\nI saw your posting on CampusConnect for the item "${item.title}".`;
+            };
+            document.getElementById('item-modal').classList.remove('hidden');
+        }
+        function closeModal() {
+            document.getElementById('item-modal').classList.add('hidden');
+        }
+
+        function directContact(itemId) {
+            openModal(itemId);
+        }
+    </script>
+</body>
+</html>
